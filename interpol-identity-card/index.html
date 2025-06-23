@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTERPOL Identity Card Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@gh-pages/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .security-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 204, 0, 0.05) 0%, transparent 5%),
+                radial-gradient(circle at 80% 70%, rgba(255, 204, 0, 0.05) 0%, transparent 5%),
+                repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(26, 42, 108, 0.03) 3px, rgba(26, 42, 108, 0.03) 6px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .header {
+            background: linear-gradient(to right, #1a2a6c, #2c3e50);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+            border-bottom: 4px solid #ffcc00;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+            z-index: 2;
+        }
+        
+        .header-logo i {
+            font-size: 42px;
+            margin-right: 20px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+        
+        .header-text h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .header-text p {
+            font-size: 16px;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+        }
+        
+        .content {
+            display: flex;
+            padding: 40px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .form-section {
+            flex: 1;
+            padding: 20px 30px 20px 0;
+            border-right: 1px solid rgba(26, 42, 108, 0.1);
+        }
+        
+        .card-section {
+            flex: 1;
+            padding: 20px 0 20px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .section-title {
+            color: #1a2a6c;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 24px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 70px;
+            height: 4px;
+            background: linear-gradient(to right, #1a2a6c, #2c3e50);
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #1a2a6c;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+            color: #333;
+        }
+        
+        input:focus, select:focus {
+            border-color: #1a2a6c;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 18px;
+            top: 48px;
+            color: #1a2a6c;
+            font-size: 18px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a2a6c, #2c3e50);
+            color: white;
+            border: none;
+            padding: 16px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(26, 42, 108, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(26, 42, 108, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .id-card {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+        
+        .card-header {
+            background: linear-gradient(to right, #1a2a6c, #2c3e50);
+            padding: 25px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header::after {
+            content: "INTERPOL";
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 80px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.05);
+            letter-spacing: 5px;
+        }
+        
+        .card-header h3 {
+            font-size: 28px;
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .card-header p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .interpol-logo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a2a6c;
+            font-weight: bold;
+            font-size: 20px;
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            z-index: 2;
+        }
+        
+        .card-body {
+            padding: 30px;
+            display: flex;
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hologram {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(26,42,108,0.1) 0%, rgba(255,204,0,0.2) 100%);
+            border-radius: 50%;
+            opacity: 0.3;
+            z-index: 1;
+        }
+        
+        .card-photo {
+            width: 150px;
+            height: 180px;
+            background: linear-gradient(135deg, #e0e0e0, #f5f5f5);
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-size: 14px;
+            text-align: center;
+            flex-shrink: 0;
+            margin-right: 30px;
+            position: relative;
+            overflow: hidden;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .photo-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(240,240,240,0.7));
+        }
+        
+        .card-details {
+            width: 100%;
+            z-index: 2;
+        }
+        
+        .card-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(221, 221, 221, 0.5);
+        }
+        
+        .card-label {
+            font-weight: 600;
+            width: 40%;
+            color: #1a2a6c;
+            min-width: 130px;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-value {
+            width: 60%;
+            color: #333;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .barcode-container {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #eee;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 2;
+        }
+        
+        #barcode {
+            margin: 0 auto;
+            display: block;
+            height: 70px;
+        }
+        
+        .card-footer {
+            background: linear-gradient(to right, #f8f9fa, #eef0f3);
+            padding: 15px;
+            text-align: center;
+            color: #555;
+            font-size: 13px;
+            font-weight: 500;
+            border-top: 1px solid #eee;
+            letter-spacing: 0.5px;
+        }
+        
+        .security-features {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .feature {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            margin: 0 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(221, 221, 221, 0.5);
+        }
+        
+        .feature i {
+            font-size: 24px;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+        }
+        
+        .feature h4 {
+            color: #1a2a6c;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .file-barcode-section {
+            padding: 30px 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #eef0f3 100%);
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .file-barcode-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(26, 42, 108, 0.1);
+        }
+        
+        .file-barcode-section h2 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 24px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .file-barcode-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 4px;
+            background: linear-gradient(to right, #1a2a6c, #2c3e50);
+            border-radius: 2px;
+        }
+        
+        .file-barcode-section p {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 16px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        
+        #file-barcode {
+            display: flex;
+            justify-content: center;
+            margin: 25px 0;
+        }
+        
+        .file-barcode-section .note {
+            font-size: 13px;
+            color: #777;
+            margin-top: 15px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            font-style: italic;
+        }
+
+        @media (max-width: 900px) {
+            .content {
+                flex-direction: column;
+                padding: 30px;
+            }
+            
+            .form-section {
+                padding: 0 0 30px 0;
+                border-right: none;
+                border-bottom: 1px solid rgba(26, 42, 108, 0.1);
+            }
+            
+            .card-section {
+                padding: 30px 0 0 0;
+            }
+            
+            .id-card {
+                max-width: 100%;
+            }
+            
+            .file-barcode-section {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="security-overlay"></div>
+        
+        <div class="header">
+            <div class="header-logo">
+                <i class="fas fa-shield-alt"></i>
+                <div class="header-text">
+                    <h1>INTERPOL RECOVERY SERVICE</h1>
+                    <p>Identity Credential Management System</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <h2 class="section-title">AGENT CREDENTIALS</h2>
+                <div class="form-group">
+                    <label for="fullName"><i class="fas fa-user"></i> FULL NAME</label>
+                    <input type="text" id="fullName" placeholder="Enter agent's full name" value="ALEXANDRE DUBOIS">
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="badgeNumber"><i class="fas fa-id-badge"></i> BADGE NUMBER</label>
+                    <input type="text" id="badgeNumber" placeholder="Enter badge number" value="INT-RS-789456">
+                    <i class="fas fa-id-card input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="department"><i class="fas fa-building"></i> DEPARTMENT</label>
+                    <select id="department">
+                        <option>Recovery Service</option>
+                        <option>Cyber Crime Division</option>
+                        <option>Human Trafficking Unit</option>
+                        <option>Financial Crimes</option>
+                        <option>Counter-Terrorism</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="rank"><i class="fas fa-star"></i> RANK</label>
+                    <select id="rank">
+                        <option>Senior Recovery Agent</option>
+                        <option>Recovery Agent</option>
+                        <option>Field Officer</option>
+                        <option>Supervisory Agent</option>
+                        <option>Director</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="issueDate"><i class="fas fa-calendar-alt"></i> ISSUE DATE</label>
+                    <input type="text" id="issueDate" placeholder="DD/MM/YYYY" value="15/06/2025">
+                    <i class="fas fa-calendar input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="expiryDate"><i class="fas fa-calendar-times"></i> EXPIRY DATE</label>
+                    <input type="text" id="expiryDate" placeholder="DD/MM/YYYY" value="14/06/2028">
+                    <i class="fas fa-calendar-minus input-icon"></i>
+                </div>
+                <button id="generateBtn">GENERATE IDENTITY CARD</button>
+            </div>
+            
+            <div class="card-section">
+                <h2 class="section-title">OFFICIAL IDENTITY CARD</h2>
+                
+                <div class="id-card">
+                    <div class="card-header">
+                        <h3>INTERPOL</h3>
+                        <p>INTERNATIONAL CRIMINAL POLICE ORGANIZATION</p>
+                        <div class="interpol-logo">ICP</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="hologram"></div>
+                        
+                        <div class="card-photo">
+                            <div class="photo-placeholder">
+                                <i class="fas fa-user" style="font-size: 42px; margin-bottom: 12px; color: #1a2a6c;"></i>
+                                AGENT PHOTO
+                            </div>
+                        </div>
+                        
+                        <div class="card-details">
+                            <div class="card-row">
+                                <div class="card-label">FULL NAME:</div>
+                                <div class="card-value" id="cardName">ALEXANDRE DUBOIS</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-label">BADGE NUMBER:</div>
+                                <div class="card-value" id="cardBadge">INT-RS-789456</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-label">DEPARTMENT:</div>
+                                <div class="card-value" id="cardDept">RECOVERY SERVICE</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-label">RANK:</div>
+                                <div class="card-value" id="cardRank">SENIOR RECOVERY AGENT</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-label">ISSUE DATE:</div>
+                                <div class="card-value" id="cardIssue">15/06/2025</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-label">EXPIRY DATE:</div>
+                                <div class="card-value" id="cardExpiry">14/06/2028</div>
+                            </div>
+                            
+                            <div class="barcode-container">
+                                <svg id="barcode"></svg>
+                                <p style="margin-top: 12px; color: #666; font-size: 12px; font-weight: 500; letter-spacing: 0.5px;">SCAN BARCODE TO VERIFY CREDENTIALS</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        PROPERTY OF INTERNATIONAL CRIMINAL POLICE ORGANIZATION • UNAUTHORIZED USE PROHIBITED
+                    </div>
+                </div>
+                
+                <div class="security-features">
+                    <div class="feature">
+                        <i class="fas fa-qrcode"></i>
+                        <h4>ENCRYPTED BARCODE</h4>
+                        <p>Contains secured agent credentials with verification link</p>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>SECURITY HOLOGRAM</h4>
+                        <p>Tamper-evident security features prevent counterfeiting</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- File content barcode section -->
+        <div class="file-barcode-section">
+            <div class="file-barcode-container">
+                <h2>FILE CONTENT BARCODE</h2>
+                <p>Scan this QR code to view the exact content of this HTML file</p>
+                
+                <div id="file-barcode"></div>
+                
+                <p class="note">Note: This QR code points to the raw content of this HTML file hosted Interpol. Scanning it will open the file content in your browser.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize with default values
+            generateBarcode();
+            
+            // Add event listener to the generate button
+            document.getElementById('generateBtn').addEventListener('click', generateBarcode);
+            
+            function generateBarcode() {
+                // Get form values
+                const fullName = document.getElementById('fullName').value.toUpperCase();
+                const badgeNumber = document.getElementById('badgeNumber').value.toUpperCase();
+                const department = document.getElementById('department').value.toUpperCase();
+                const rank = document.getElementById('rank').value.toUpperCase();
+                const issueDate = document.getElementById('issueDate').value;
+                const expiryDate = document.getElementById('expiryDate').value;
+                
+                // Update card display
+                document.getElementById('cardName').textContent = fullName;
+                document.getElementById('cardBadge').textContent = badgeNumber;
+                document.getElementById('cardDept').textContent = department;
+                document.getElementById('cardRank').textContent = rank;
+                document.getElementById('cardIssue').textContent = issueDate;
+                document.getElementById('cardExpiry').textContent = expiryDate;
+                
+                // Create the data string for the barcode
+                const barcodeData = 
+`INTERPOL RECOVERY SERVICE PORTAL
+AGENT: ${fullName}
+DEPT: ${department}
+RANK: ${rank}
+BADGE: ${badgeNumber}
+ISSUED: ${issueDate}
+EXPIRES: ${expiryDate}
+VERIFY: https://verify.interpol.org/rs`;
+                
+                // Generate barcode
+                JsBarcode("#barcode", barcodeData, {
+                    format: "CODE128",
+                    width: 2.2,
+                    height: 70,
+                    displayValue: false,
+                    background: "transparent",
+                    lineColor: "#1a2a6c"
+                });
+            }
+            
+            // Generate QR code for the file content
+            // Replace with your GitHub raw URL after hosting
+            const fileContentUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/interpol-identity-card.html";
+            
+            // Clear previous QR code
+            const fileBarcodeContainer = document.getElementById("file-barcode");
+            fileBarcodeContainer.innerHTML = '';
+            
+            // Generate QR code
+            new QRCode(fileBarcodeContainer, {
+                text: fileContentUrl,
+                width: 180,
+                height: 180,
+                colorDark: "#1a2a6c",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+    </script>
+</body>
+</html>

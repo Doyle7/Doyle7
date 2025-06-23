@@ -1,3 +1,5 @@
+# This file contains documentation for the INTERPOL identity card generator project.
+
 This is a professional INTERPOL identity card generator with a QR code that links to the exact HTML file content. The application allows users to generate official-looking INTERPOL agent credentials with security features.
 
 ![INTERPOL Identity Card](screenshot.png)
@@ -37,3 +39,4 @@ This is a professional INTERPOL identity card generator with a QR code that link
 3. In the HTML file, find this line:
    ```js
    const fileContentUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/interpol-identity-card.html";
+```
